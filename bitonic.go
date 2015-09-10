@@ -38,24 +38,23 @@ func (a *arr) startSorting(dir bool) {
 }
 
 func (a *arr) spSort(lo int, n int, dir bool, wg *sync.WaitGroup) {
+	defer wg.Done()
 	if n > 1 {
 		m := n / 2
 		var iwg sync.WaitGroup
 
 		iwg.Add(2)
+
 		go a.spSort(lo, m, !dir, &iwg)
 		go a.spSort(lo+m, n-m, dir, &iwg)
 
 		iwg.Wait()
 
 		a.spMerge(lo, n, dir, wg)
-	} else {
-		wg.Done()
 	}
 }
 
 func (a *arr) spMerge(lo int, n int, dir bool, wg *sync.WaitGroup) {
-	defer wg.Done()
 	if n > 1 {
 
 		m := 1
@@ -70,7 +69,6 @@ func (a *arr) spMerge(lo int, n int, dir bool, wg *sync.WaitGroup) {
 			}
 		}
 
-		wg.Add(2)
 		a.spMerge(lo, m, dir, wg)
 		a.spMerge(lo+m, n-m, dir, wg)
 

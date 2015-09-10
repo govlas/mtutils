@@ -57,7 +57,6 @@ func (a *arr) spSort(lo int, n int, dir bool, wg *sync.WaitGroup) {
 func (a *arr) spMerge(lo int, n int, dir bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if n > 1 {
-		//m := n / 2
 
 		m := 1
 		for m < n {
@@ -70,13 +69,11 @@ func (a *arr) spMerge(lo int, n int, dir bool, wg *sync.WaitGroup) {
 				a.Swap(i, i+m)
 			}
 		}
-		var iwg sync.WaitGroup
 
-		iwg.Add(2)
-		go a.spMerge(lo, m, dir, &iwg)
-		go a.spMerge(lo+m, n-m, dir, &iwg)
+		wg.Add(2)
+		go a.spMerge(lo, m, dir, wg)
+		go a.spMerge(lo+m, n-m, dir, wg)
 
-		iwg.Wait()
 	}
 
 }

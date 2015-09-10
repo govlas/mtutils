@@ -71,8 +71,8 @@ func (a *arr) spMerge(lo int, n int, dir bool, wg *sync.WaitGroup) {
 		}
 
 		wg.Add(2)
-		go a.spMerge(lo, m, dir, wg)
-		go a.spMerge(lo+m, n-m, dir, wg)
+		a.spMerge(lo, m, dir, wg)
+		a.spMerge(lo+m, n-m, dir, wg)
 
 	}
 

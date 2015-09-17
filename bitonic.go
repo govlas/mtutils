@@ -50,11 +50,11 @@ func (a *arr) spSort(lo int, n int, dir bool, wg *sync.WaitGroup) {
 
 		iwg.Wait()
 
-		a.spMerge(lo, n, dir, wg)
+		a.spMerge(lo, n, dir)
 	}
 }
 
-func (a *arr) spMerge(lo int, n int, dir bool, wg *sync.WaitGroup) {
+func (a *arr) spMerge(lo int, n int, dir bool) {
 	if n > 1 {
 
 		m := 1
@@ -69,8 +69,8 @@ func (a *arr) spMerge(lo int, n int, dir bool, wg *sync.WaitGroup) {
 			}
 		}
 
-		a.spMerge(lo, m, dir, wg)
-		a.spMerge(lo+m, n-m, dir, wg)
+		a.spMerge(lo, m, dir)
+		a.spMerge(lo+m, n-m, dir)
 
 	}
 

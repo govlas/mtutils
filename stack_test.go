@@ -1,7 +1,6 @@
 package mtutils_test
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/govlas/mtutils"
@@ -9,37 +8,53 @@ import (
 )
 
 func TestStack(t *testing.T) {
-	s := mtutils.NewStack()
-	s.Push(1)
-	s.Push(2)
-	s.Push(3)
 
-	assert.Equal(t, s.Pop(), 3, "TestStack")
-	assert.Equal(t, s.Pop(), 2, "TestStack")
-	assert.Equal(t, s.Pop(), 1, "TestStack")
+	s := mtutils.NewStack(false)
+	const cnt = 100
+	for i := 0; i < cnt; i++ {
+		s.Push(i)
+	}
 
+	assert.Equal(t, s.Count(), cnt, "TestStack")
+
+	a := cnt - 1
+	for s.Count() > 0 {
+		b := s.Pop()
+		if !assert.Equal(t, b, a, "TestStack") {
+			break
+		}
+		a--
+	}
+	assert.Equal(t, s.Count(), 0, "TestStack")
 	assert.Equal(t, s.Pop(), nil, "TestStack")
 }
 
-func push(v int, s *mtutils.Stack, wg *sync.WaitGroup) {
-	defer wg.Done()
-	s.Push(v)
-}
-func TestStackCount(t *testing.T) {
+func TestStackMt(t *testing.T) {
+	s := mtutils.NewStack(true)
+	ch := make(chan int)
+	wait := make(chan int)
 
-	s := mtutils.NewStack()
-	var wg sync.WaitGroup
-	wg.Add(3)
-	go push(1, s, &wg)
-	go push(2, s, &wg)
-	go push(3, s, &wg)
+	go func() {
+		for i := range ch {
+			s.Push(i)
+		}
+	}()
 
-	wg.Wait()
+	go func() {
+		for {
+			b := s.Pop()
 
-	assert.Equal(t, s.Count(), 3, "TestStackCount")
+			if b == 0 {
+				wait <- 1
+				break
+			}
+		}
+	}()
 
-	for s.Count() > 0 {
-		s.Pop()
+	const cnt = 100
+	for i := 0; i < cnt; i++ {
+		ch <- i
 	}
-	assert.Equal(t, s.Count(), 0, "TestStackCount")
+	close(ch)
+	<-wait
 }

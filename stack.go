@@ -5,30 +5,35 @@ import (
 	"sync/atomic"
 )
 
+type Stack interface {
+	Count() int
+	Push(interface{})
+	Pop() interface{}
+}
+
 type node struct {
 	data interface{}
 	next *node
 }
 
-type Stack struct {
-	sync.Mutex
+type stack struct {
 	head  *node
 	count int32
 }
 
-func NewStack() *Stack {
-	s := new(Stack)
-	return s
+func NewStack(threadSafe bool) Stack {
+	if threadSafe {
+		return &tsStack{}
+	} else {
+		return &noTsStack{}
+	}
 }
 
-func (s *Stack) Count() int {
+func (s *stack) Count() int {
 	return int(atomic.LoadInt32(&s.count))
 }
 
-func (s *Stack) Push(item interface{}) {
-	s.Lock()
-	defer s.Unlock()
-
+func (s *stack) push(item interface{}) {
 	atomic.AddInt32(&s.count, 1)
 
 	n := &node{data: item}
@@ -41,10 +46,7 @@ func (s *Stack) Push(item interface{}) {
 	}
 }
 
-func (s *Stack) Pop() interface{} {
-	s.Lock()
-	defer s.Unlock()
-
+func (s *stack) pop() interface{} {
 	var n *node
 	if s.head != nil {
 		n = s.head
@@ -55,4 +57,33 @@ func (s *Stack) Pop() interface{} {
 	}
 	atomic.AddInt32(&s.count, -1)
 	return n.data
+}
+
+type tsStack struct {
+	sync.Mutex
+	stack
+}
+
+func (s *tsStack) Push(item interface{}) {
+	s.Lock()
+	defer s.Unlock()
+	s.push(item)
+}
+
+func (s *tsStack) Pop() interface{} {
+	s.Lock()
+	defer s.Unlock()
+	return s.pop()
+}
+
+type noTsStack struct {
+	stack
+}
+
+func (s *noTsStack) Push(item interface{}) {
+	s.push(item)
+}
+
+func (s *noTsStack) Pop() interface{} {
+	return s.pop()
 }
